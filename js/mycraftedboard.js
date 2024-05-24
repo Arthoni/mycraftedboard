@@ -1,8 +1,20 @@
 "use strict";
 
 
-var VERSION = '0.6';
+var VERSION = '0.6.1';
+var filteredTasks = tasks;
 
+
+function filter(k) {
+  filteredTasks = tasks.map(lane => {
+    return {
+      ...lane,
+      items: lane.items.filter(subItem => subItem.includes("["+k+"]"))
+    };
+  });
+  console.log("NEW:", filteredTasks);
+  buildFullBoard();
+}
 
 function createItem(content, counters) {
   var tags = [];
@@ -60,7 +72,7 @@ function createItem(content, counters) {
       if (tagParts.length > 1) {
         tagText = tagParts.slice(1,tagParts.length).join("");
       }
-      tagsHtml += "<span class='tag' style='background: "+tagInfo.color+"'>"+tagText+"</span>";
+      tagsHtml += "<span class='tag' onclick=\"filter('"+tagKey+"');\" style='background: "+tagInfo.color+"'>"+tagText+"</span>";
     }
   });
 
@@ -81,7 +93,7 @@ function createLane(title, color, items, counters) {
   var itemsHtml = "";
 
   items.forEach(element => {
-    itemsHtml+= createItem(element, counters);
+    itemsHtml+= createItem(element, counters); //if (FILTERING == "" || element.includes(FILTERING))
   });
 
   var styleTxt = "";
@@ -204,10 +216,15 @@ function buildMultipleBoard(parent,multipleTasks) {
 function buildFullBoard() {
 
   let boardDiv = document.getElementById("board");
+  
+  const rows = document.querySelectorAll('.row');
 
-  if (typeof(tasks) === 'undefined' ||
-      !Array.isArray(tasks) ||
-      tasks.length == 0 ) {
+  rows.forEach(row => row.parentNode.removeChild(row));
+
+
+  if (typeof(filteredTasks) === 'undefined' ||
+      !Array.isArray(filteredTasks) ||
+      filteredTasks.length == 0 ) {
     // process wrong data
     let noDataDiv = document.createElement("div");
     noDataDiv.className = "p-5";
@@ -215,16 +232,16 @@ function buildFullBoard() {
     noDataDiv.innerHTML = "<p class='text-center'>No task found!<br/><span style='font-size : 200%'>🏖</span><br/><br/>Check your <tt>board-tasks.js</tt> file</p>";
     boardDiv.appendChild(noDataDiv);
   } else {
-    if (!tasks[0].hasOwnProperty("tasks")) {
+    if (!filteredTasks[0].hasOwnProperty("tasks")) {
       // go for single board
       let pillw = document.getElementById("pill-warning-x");
-      pillw.id = "pill-warning-0";
+      if (pillw !== null) pillw.id = "pill-warning-0";
       let pilld = document.getElementById("pill-danger-x");
-      pilld.id = "pill-danger-0";
-      buildSingleBoard(boardDiv,tasks,0);
+      if (pilld !== null) pilld.id = "pill-danger-0";
+      buildSingleBoard(boardDiv,filteredTasks,0);
     } else {
       // go for multiple board
-      buildMultipleBoard(boardDiv,tasks);
+      buildMultipleBoard(boardDiv,filteredTasks);
     }
   }
 }

@@ -1,0 +1,4 @@
+TODO
+
+- Info about current filter
+- Ability to remove filter
